@@ -1,40 +1,33 @@
 package com.jpa.Issue;
 
-import java.util.Date;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.jpa.Issue.Entity.Course;
+import com.jpa.Issue.dao.IssueDao;
 
 @SpringBootApplication
 public class IssueApplication implements CommandLineRunner {
 
-	@PersistenceContext
-	EntityManager em;
+	@Autowired
+	IssueDao issueDao;
 	
 	public static void main(String[] args) {
 		SpringApplication.run(IssueApplication.class, args);
 	}
 
 	
-	@Transactional
 	public void run(String... args) throws Exception {
-		System.out.println("Run method started");
 		
-		Course course1 = new Course("one", "one", new Date());
-		Course course2 = new Course("two", "two", new Date());
+		System.out.println("Before method1");
+		issueDao.method1();
+		System.out.println("After method1");
 		
-		em.persist(course1);
-		em.persist(course2);
-		em.detach(course2);
-	
-		System.out.println("Run method completed");
+		System.out.println("Before method2");
+		issueDao.method2();
+		System.out.println("After method2");
+		
 	}
 
 	
