@@ -1,0 +1,53 @@
+param(
+    [string]$vaultAddress = "https://your-vault-server",
+    [string]$secretPath,
+    [string]$secretKey,
+    [string]$secretValue,
+    [string]$authMethod = "userpass",  # Update with your authentication method
+    [string]$username,
+    [string]$password
+)
+
+# Check if required parameters are provided
+if (-not $secretPath -or -not $secretKey -or -not $secretValue -or -not $username -or -not $password) {
+    Write-Error "Please provide values for all parameters: secretPath, secretKey, secretValue, username, password."
+    exit 1
+}
+
+# Set the Vault address
+$env:VAULT_ADDR = $vaultAddress
+
+# Check if the Vault CLI is installed
+if (-not (Get-Command vault -ErrorAction SilentlyContinue)) {
+    Write-Error "Vault CLI is not installed. Please install it and make sure it's in your PATH."
+    exit 1
+}
+
+# Check if Vault is reachable
+if (-not (Test-Connection -ComputerName $env:VAULT_ADDR.Split('//')[1] -Count 1 -ErrorAction SilentlyContinue)) {
+    Write-Error "Vault server is not reachable at $vaultAddress. Please check the address and try again."
+    exit 1
+}
+
+# Vault login
+try {
+    $loginCommand = "vault login -method=$authMethod username=$username password=$password"
+    Invoke-Expression -Command $loginCommand -ErrorAction Stop
+    Write-Host "Successfully logged in to Vault using $authMethod authentication."
+} catch {
+    Write-Error "Failed to log in to Vault. Please check your credentials and authentication method."
+    exit 1
+}
+
+# Use the vault kv put command to store the secret
+$putCommand = "vault kv put $secretPath $secretKey=$secretValue"
+
+# Execute the command
+$result = Invoke-Expression -Command $putCommand -ErrorAction Stop
+
+if ($result) {
+    Write-Host "Secret '$secretKey' has been stored in Vault at path '$secretPath'."
+} else {
+    Write-Error "Failed to store the secret in Vault."
+    exit 1
+}
